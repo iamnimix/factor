@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>فاکتورساز</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{--bg:#f4f5f7;--cd:#fff;--tx:#1d1d1f;--mu:#6b6b72;--ac:#0a7a5a;--bd:#e2e3e8;--dn:#c0392b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111214;--cd:#1c1d20;--tx:#f2f2f2;--mu:#9a9aa2;--ac:#34c79a;--bd:#333439;--dn:#ff6b5e}}
+:root[data-theme="dark"]{--bg:#111214;--cd:#1c1d20;--tx:#f2f2f2;--mu:#9a9aa2;--ac:#34c79a;--bd:#333439;--dn:#ff6b5e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:Vazirmatn,Tahoma,sans-serif;font-size:15px}
+#app{max-width:640px;margin:0 auto;padding:14px}
+h1{font-size:20px;margin:0}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.c{background:var(--cd);border:1px solid var(--bd);border-radius:14px;padding:12px;margin:10px 0}
+.mu{color:var(--mu);font-size:13px;margin:4px 0}
+.r1{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.tg{font-size:12px;padding:2px 8px;border-radius:99px;background:var(--bd);white-space:nowrap}
+.tg.ok{background:var(--ac);color:#fff}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+button,input,select{font-family:inherit;font-size:15px}
+.b{border:1px solid var(--bd);background:var(--cd);color:var(--tx);border-radius:10px;padding:8px 12px;cursor:pointer}
+.b.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+.b.d{color:var(--dn);border-color:var(--dn)}
+.big{width:100%;padding:13px;font-weight:700}
+.ic{background:none;border:0;font-size:22px;cursor:pointer}
+input,select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--cd);color:var(--tx)}
+label{display:block;margin:10px 0 4px;color:var(--mu);font-size:13px}
+.row{display:grid;grid-template-columns:26px 1fr 54px 90px 22px;gap:4px;align-items:center;margin:6px 0}
+.row input{padding:8px 5px;text-align:center}
+.row input:nth-child(2){text-align:right}
+.rt{grid-column:2/6;font-size:12px;color:var(--mu);text-align:left;margin-top:-2px}
+.sum{display:flex;justify-content:space-between;font-weight:700;font-size:17px;margin-top:12px}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;flex-direction:column;align-items:center;padding:14px;gap:10px;z-index:9;overflow:auto}
+#ov img{max-width:100%;border-radius:8px;background:#fff}
+#ov p{color:#fff;margin:0;text-align:center;font-size:13px}
+</style></head><body>
+<div id="app"></div>
+<div id="ov"></div>
+<div id="rd" style="position:fixed;left:-9999px;top:0"></div>
+<script>
+const M=['تلگرام','روبیکا','اینستاگرام','حضوری','السات'],DAY=864e5;
+let inv=[],set={name:'',phone:'',logo:''},cur=null,view='h',delId=null;
+const ld=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+const sv=()=>{try{localStorage.setItem('inv_v1',JSON.stringify(inv));localStorage.setItem('inv_set',JSON.stringify(set))}catch(e){}};
+inv=ld('inv_v1',[]);set=ld('inv_set',set);
+const fa=n=>Number(n||0).toLocaleString('fa-IR');
+const en=s=>String(s).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\D/g,'');
+const dt=t=>new Date(t).toLocaleDateString('fa-IR-u-ca-persian',{year:'numeric',month:'long',day:'numeric'});
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const tot=i=>i.rows.reduce((s,r)=>s+r.q*r.p,0);
+function purge(){const n=Date.now(),l=inv.length;inv=inv.filter(i=>n-(i.reg||i.at)<5*DAY);if(l!=inv.length)sv()}
+function draw(){const a=document.getElementById('app');a.innerHTML=view=='h'?home():view=='e'?editor():sett()}
+function home(){purge();
+return `<div class=top><h1>فاکتورها</h1><button class=ic onclick="view='s';draw()">⚙️</button></div>
+<button class="b p big" onclick="edit()">+ ثبت فاکتور جدید</button>`+
+(inv.length?inv.map(i=>{const left=Math.ceil((5*DAY-(Date.now()-(i.reg||i.at)))/DAY);
+return `<div class=c><div class=r1><b>${esc(i.buyer)} ${esc(i.method)}</b><span class="tg ${i.reg?'ok':''}">${i.reg?'ثبت شده':'ثبت نشده'}</span></div>
+<div class=mu>${dt(i.at)} · ${fa(tot(i))} تومان</div><div class=mu>حذف خودکار: ${fa(left)} روز دیگر</div>
+<div class=acts><button class=b onclick="shot(${i.id})">🖼 عکس</button><button class=b onclick="edit(${i.id})">ویرایش</button>
+${i.reg?'':`<button class="b p" onclick="regi(${i.id})">ثبت</button>`}
+<button class="b d" onclick="del(${i.id})">${delId==i.id?'مطمئنی؟ حذف':'حذف'}</button></div></div>`}).join(''):'<p class=mu>هنوز فاکتوری نداری.</p>')}
+function regi(id){inv.find(i=>i.id==id).reg=Date.now();sv();draw()}
+function del(id){if(delId!=id){delId=id;draw();return}inv=inv.filter(i=>i.id!=id);delId=null;sv();draw()}
+function edit(id){cur=id?JSON.parse(JSON.stringify(inv.find(i=>i.id==id))):{id:Date.now(),at:Date.now(),buyer:'',method:'',reg:0,rows:[{n:'',q:0,p:0}]};view='e';draw()}
+function editor(){return `<div class=top><h1>${inv.some(i=>i.id==cur.id)?'ویرایش فاکتور':'فاکتور جدید'}</h1><span class=mu>${dt(cur.at)}</span></div>
+<label>نام خریدار</label><input value="${esc(cur.buyer)}" oninput="cur.buyer=this.value" placeholder="مثلا سینا ابرقویی">
+<label>روش ثبت</label><select onchange="cur.method=this.value"><option value="">انتخاب کن</option>${M.map(m=>`<option ${cur.method==m?'selected':''}>${m}</option>`).join('')}</select>
+<div class=c><div class=mu>ردیف · نام محصول · تعداد · قیمت واحد (تومان)</div><div id=rows>${cur.rows.map(rw).join('')}</div>
+<button class="b" onclick="cur.rows.push({n:'',q:0,p:0});rr()">+ ردیف جدید</button>
+<div class=sum><span>جمع کل</span><span id=gt>${fa(tot(cur))} تومان</span></div></div>
+<div class=acts><button class="b p" style="flex:1" onclick="save()">ذخیره فاکتور</button><button class=b onclick="saveShot()">🖼 ذخیره عکس</button><button class=b onclick="view='h';draw()">انصراف</button></div>`}
+function rw(r,i){return `<div class=row><span>${fa(i+1)}</span><input value="${esc(r.n)}" oninput="cur.rows[${i}].n=this.value" placeholder="محصول">
+<input inputmode=numeric value="${r.q?fa(r.q):''}" onfocus="this.value=this.value?en(this.value):''" oninput="upd(${i},'q',this)" onblur="this.value=cur.rows[${i}].q?fa(cur.rows[${i}].q):''" placeholder="تعداد">
+<input inputmode=numeric value="${r.p?fa(r.p):''}" onfocus="this.value=this.value?en(this.value):''" oninput="upd(${i},'p',this)" onblur="this.value=cur.rows[${i}].p?fa(cur.rows[${i}].p):''" placeholder="قیمت">
+<button class=ic style="font-size:16px;color:var(--dn)" onclick="cur.rows.splice(${i},1);if(!cur.rows.length)cur.rows.push({n:'',q:0,p:0});rr()">✕</button>
+<div class=rt id=t${i}>جمع: ${fa(r.q*r.p)}</div></div>`}
+function rr(){document.getElementById('rows').innerHTML=cur.rows.map(rw).join('');document.getElementById('gt').textContent=fa(tot(cur))+' تومان'}
+function upd(i,k,el){cur.rows[i][k]=+en(el.value)||0;document.getElementById('t'+i).textContent='جمع: '+fa(cur.rows[i].q*cur.rows[i].p);document.getElementById('gt').textContent=fa(tot(cur))+' تومان'}
+function ok(){if(!cur.buyer.trim()||!cur.method){alert('نام خریدار و روش ثبت را وارد کن');return false}return true}
+function put(){const x=inv.findIndex(i=>i.id==cur.id);if(x>=0)inv[x]=cur;else inv.unshift(cur);sv()}
+function save(){if(!ok())return;put();view='h';draw()}
+function saveShot(){if(!ok())return;put();shot(cur.id)}
+async function shot(id){const i=inv.find(x=>x.id==id);if(!i)return;
+const ov=document.getElementById('ov');ov.style.display='flex';ov.innerHTML='<p>در حال ساخت عکس...</p>';
+const rows=i.rows.filter(r=>r.n||r.p);const td='style="border:1px solid #ddd;padding:8px;text-align:center"';
+document.getElementById('rd').innerHTML=`<div id=inv style="width:600px;background:#fff;color:#111;padding:28px;font-family:Vazirmatn,Tahoma,sans-serif;direction:rtl">
+<div style="display:flex;align-items:center;gap:14px;border-bottom:3px solid #0a7a5a;padding-bottom:14px">
+${set.logo?`<img src="${set.logo}" style="height:70px;max-width:140px;object-fit:contain">`:''}
+<div style="flex:1"><div style="font-size:22px;font-weight:700">${esc(set.name)||'نام فروشگاه'}</div><div style="color:#555;font-size:14px">${esc(set.phone)}</div></div>
+<div style="text-align:left;font-size:13px;color:#555">فاکتور فروش<br>${dt(i.at)}</div></div>
+<div style="margin:14px 0;font-size:15px">خریدار: <b>${esc(i.buyer)}</b> · روش: ${esc(i.method)}</div>
+<table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="background:#eef6f3"><th ${td}>ردیف</th><th ${td}>نام محصول</th><th ${td}>تعداد</th><th ${td}>قیمت واحد</th><th ${td}>جمع</th></tr>
+${rows.map((r,k)=>`<tr><td ${td}>${fa(k+1)}</td><td ${td}>${esc(r.n)}</td><td ${td}>${fa(r.q)}</td><td ${td}>${fa(r.p)}</td><td ${td}>${fa(r.q*r.p)}</td></tr>`).join('')}</table>
+<div style="margin-top:16px;padding:12px;background:#0a7a5a;color:#fff;border-radius:8px;display:flex;justify-content:space-between;font-size:18px;font-weight:700"><span>مبلغ نهایی</span><span>${fa(tot(i))} تومان</span></div>
+<div style="text-align:center;color:#888;font-size:12px;margin-top:14px">با تشکر از خرید شما</div></div>`;
+try{await document.fonts.ready;const c=await html2canvas(document.getElementById('inv'),{scale:2,backgroundColor:'#fff',useCORS:true});
+const url=c.toDataURL('image/png');
+ov.innerHTML=`<p>روی عکس نگه دار و «ذخیره تصویر» رو بزن</p><img src="${url}"><div class=acts><button class="b p" id=sh>اشتراک / ذخیره</button><button class=b onclick="closeOv()">بستن</button></div>`;
+document.getElementById('sh').onclick=()=>c.toBlob(async bl=>{try{const f=new File([bl],'factor.png',{type:'image/png'});await navigator.share({files:[f]})}catch(e){alert('روی عکس نگه دار و ذخیره کن')}})
+}catch(e){ov.innerHTML='<p>خطا در ساخت عکس</p><button class=b onclick="closeOv()">بستن</button>'}}
+function closeOv(){document.getElementById('ov').style.display='none';if(view=='e'){view='h'}draw()}
+function sett(){return `<div class=top><h1>تنظیمات سربرگ</h1></div><div class=c>
+<label>نام فروشگاه</label><input value="${esc(set.name)}" oninput="set.name=this.value;sv()">
+<label>شماره تماس / آدرس</label><input value="${esc(set.phone)}" oninput="set.phone=this.value;sv()">
+<label>لوگو</label>${set.logo?`<img src="${set.logo}" style="height:70px;display:block;margin-bottom:8px">`:''}
+<input type=file accept="image/*" onchange="lg(this)">${set.logo?`<button class="b d" style="margin-top:8px" onclick="set.logo='';sv();draw()">حذف لوگو</button>`:''}</div>
+<button class="b p big" onclick="view='h';draw()">بازگشت</button>`}
+function lg(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,300/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);set.logo=c.toDataURL('image/png');sv();draw()};im.src=r.result};r.readAsDataURL(f)}
+draw();
+</script></body></html>
